@@ -29,7 +29,9 @@ function Body() {
             <h5 className="typing-text">{displayText}<span className="cursor">ǀ</span></h5>
             <p>Systems Design Engineer at the University of Waterloo</p>
             <div className="icons-container">
+                <Link to ="/contact">
                 <img src={email} alt="Contact" className="icon" />
+                </Link>
                 <Link to ="/about">
                     <img src={about} alt="About" className="icon" />
                 </Link>
