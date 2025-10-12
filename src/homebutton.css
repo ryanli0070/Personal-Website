@@ -1,0 +1,25 @@
+.home-button-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+}
+
+.home-icon {
+    width: 50px;
+    height: 50px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: rgba(248, 249, 250, 0.9);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.home-icon:hover {
+    transform: translateY(-5px);
+}
