@@ -28,7 +28,7 @@ function Body() {
     return(
         <div className="body-container">
             <HomeButton />
-            <h5 className="typing-text">{displayText}<span className="cursor">ǀ</span></h5>
+            <h5 className="typing-text">{displayText}<span className="cursor"></span></h5>
             <p>Systems Design Engineer at the University of Waterloo</p>
             <div className="icons-container">
                 <Link to ="/contact">

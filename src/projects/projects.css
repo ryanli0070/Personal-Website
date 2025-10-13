@@ -30,6 +30,7 @@
 
 .project-container1:hover {
     transform: translateY(-5px);
+    background-color: #000000;
 }
 
 .project-container2 {
@@ -49,6 +50,7 @@
 
 .project-container2:hover {
     transform: translateY(-5px);
+    background-color: #000000;
 }
 
 h1 {
@@ -81,4 +83,3 @@ dl {
     text-align: center;
     
 }
-
