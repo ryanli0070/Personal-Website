@@ -4,6 +4,7 @@ import Body from './homepage/body.jsx'
 import Particles from './homepage/particles.jsx';
 import About from './about/about.jsx';
 import Contact from './contact/contact.jsx';
+import Projects from './projects/projects.jsx';
 import { createBrowserRouter, RouterProvider, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import './main.css';
@@ -24,7 +25,8 @@ function Homepage() {
 const router = createBrowserRouter([
   {path: '/', element: <Homepage />},
   {path: '/about', element: <About />},
-  {path: '/contact', element: <Contact />}
+  {path: '/contact', element: <Contact />},
+  {path: '/projects', element: <Projects />}
 ])
 
 root.render(

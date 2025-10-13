@@ -1,0 +1,84 @@
+.projects-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 50px;
+}
+
+.project-boxes {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.project-container1 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 500px;
+    height: auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.project-container1:hover {
+    transform: translateY(-5px);
+}
+
+.project-container2 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 500px;
+    height: auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.project-container2:hover {
+    transform: translateY(-5px);
+}
+
+h1 {
+    font-size: 4rem;
+    font-family: 'Noto Serif', serif;
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+    font-family: 'Noto Serif', serif;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+p {
+    font-size: 1.5rem;
+    font-family: 'Noto Serif', serif;
+    color: #ffffff;
+    line-height: 1.6;
+    text-align: center;
+}
+
+dl {
+    font-size: 1rem;
+    font-family: 'Noto Serif', serif;
+    color: #adb5bd;
+    text-align: center;
+    
+}
+

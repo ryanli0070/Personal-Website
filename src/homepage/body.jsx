@@ -5,6 +5,7 @@ import './body.css'
 import email from '../images/email.png'
 import about from '../images/about.png'
 import projects from '../images/projects.png'
+import HomeButton from '../homebutton.jsx'
 
 function Body() {
     const [displayText, setDisplayText] = useState('')
@@ -19,13 +20,14 @@ function Body() {
             } else {
                 clearInterval(timer)
             }
-        }, 350) 
+        }, 200) 
         
         return () => clearInterval(timer)
     }, [])
     
     return(
         <div className="body-container">
+            <HomeButton />
             <h5 className="typing-text">{displayText}<span className="cursor">ǀ</span></h5>
             <p>Systems Design Engineer at the University of Waterloo</p>
             <div className="icons-container">
@@ -35,7 +37,9 @@ function Body() {
                 <Link to ="/about">
                     <img src={about} alt="About" className="icon" />
                 </Link>
+                <Link to ="/projects">
                 <img src={projects} alt="Projects" className="icon" />
+                </Link>
             </div>
         </div>
     )   

@@ -14,12 +14,12 @@
     height: 50px;
     padding: 8px;
     border-radius: 8px;
-    background-color: rgba(248, 249, 250, 0.9);
+    background-color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
     display: block;
 }
 
 .home-icon:hover {
-    transform: translateY(-5px);
+    transform: translateY(-2px);
 }

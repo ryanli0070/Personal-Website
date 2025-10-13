@@ -1,11 +1,13 @@
 import "./contact.css"
 import transition from "../transition";
+import HomeButton from '../homebutton.jsx'
 
 function Contact() {
     return (
-        
+        <div>
+            <HomeButton />
             <h1 className="contact-list">
-                <h2> Contacts:</h2>
+                <h2> <b>Contacts:</b></h2>
                 <a href="https://www.linkedin.com/in/ryan-li007/" target="_blank" rel="noopener noreferrer">
                     LinkedIn
                 </a>
@@ -19,7 +21,7 @@ function Contact() {
                     Email
                 </a>
             </h1>
-    
+        </div>
     )
 }
 
