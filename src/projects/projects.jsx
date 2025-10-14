@@ -18,7 +18,7 @@ function Projects() {
                 </Link>
                 <div className="project-container2">
                     <h2><b>MacroBud(WIP)</b></h2>
-                    <p>A local 2D multiplayer platform fighting game inspired by Super Smash Bros</p>
+                    <p>A responsive macro-nutrient tracker which sugguests dietary improvements based off eating habits</p>
                     <dl>React, Node.js, SQL</dl>
                 </div>
             </div>
