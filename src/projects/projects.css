@@ -53,6 +53,27 @@
     background-color: #000000;
 }
 
+.project-container3 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 500px;
+    height: auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.project-container3:hover {
+    transform: translateY(-5px);
+    background-color: #000000;
+}
+
+
 h1 {
     font-size: 4rem;
     font-family: 'Noto Serif', serif;

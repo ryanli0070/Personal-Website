@@ -19,8 +19,15 @@ function Projects() {
                 <div className="project-container2">
                     <h2><b>MacroBud</b></h2>
                     <p>A responsive macro-nutrient tracker which sugguests dietary improvements based off eating habits</p>
-                    <dl>React, Node.js, SQL</dl>
+                    <dl>React.js, Node.js, SQL</dl>
                 </div>
+                <Link to="https://github.com/ThomasZhang223/Jamhacks-7" target="_blank" rel="noopener noreferrer">
+                <div className="project-container3">
+                    <h2><b>Twovie</b></h2>
+                    <p>A desktop app which helps you decide what movie to watch on movie night</p>
+                    <dl>Python, Tkinter, HTML</dl>
+                </div>
+                </Link>
             </div>
         </div>
     )
