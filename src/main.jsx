@@ -32,7 +32,7 @@ const router = createHashRouter([
 root.render(
   <StrictMode>
     
-    <div className="min-h-screen bg-black relative">
+    <div className="min-h-screen bg-black relative" style={{minHeight: '100vh'}}>
       {}
       <div className="absolute inset-0">
         <Particles
