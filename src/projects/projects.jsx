@@ -12,20 +12,20 @@ function Projects() {
                 <Link to="https://github.com/ryanli0070/Shogun-Showdown" target="_blank" rel="noopener noreferrer">
                 <div className="project-container1">
                     <h2><b>Shogun Showdown</b></h2>
-                    <p>A local 2D multiplayer platform fighting game inspired by Super Smash Bros</p>
+                    <p>A local 2D multiplayer platform fighting game; inspired by Super Smash Bros</p>
                     <dl>MonoGame, .NET, C#</dl>
                 </div>
                 </Link>
                 <div className="project-container2">
                     <h2><b>MacroBud</b></h2>
-                    <p>A responsive macro-nutrient tracker which sugguests dietary improvements based off eating habits</p>
-                    <dl>React.js, Node.js, SQL</dl>
+                    <p>A streamlined marco-nutrient tracker using AI parsing</p>
+                    <dl>React.js, Node.js, MySQL</dl>
                 </div>
                 <Link to="https://github.com/ThomasZhang223/Jamhacks-7" target="_blank" rel="noopener noreferrer">
                 <div className="project-container3">
                     <h2><b>Twovie</b></h2>
-                    <p>A desktop app which helps you decide what movie to watch on movie night</p>
-                    <dl>Python, Tkinter, HTML</dl>
+                    <p>A movie search tool that helps users discover films based on preferences</p>
+                    <dl>Python, HTML</dl>
                 </div>
                 </Link>
             </div>
