@@ -9,6 +9,10 @@ import { createHashRouter, RouterProvider, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import './main.css';
 import HomeButton from './homebutton.jsx';
+import aboutpic from './images/aboutpic.webp';
+
+const preloadImg = new Image();
+preloadImg.src = aboutpic;
 
 const root = createRoot(document.getElementById("root"));
 

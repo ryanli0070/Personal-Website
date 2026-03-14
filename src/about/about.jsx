@@ -1,6 +1,6 @@
 import transition from "../transition";
 import './about.css'
-import aboutpic from '../images/aboutpic.png'
+import aboutpic from '../images/aboutpic.webp'
 import HomeButton from '../homebutton.jsx'
 
 function about() {
