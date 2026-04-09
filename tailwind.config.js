@@ -7,12 +7,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'noto-serif': ['Noto Serif', 'serif'],
+        'serif': ['Noto Serif', 'serif'],
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
       },
     },
   },
   plugins: [],
 }
-
-
-

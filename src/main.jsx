@@ -1,62 +1,17 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import Body from './homepage/body.jsx'
-import Particles from './homepage/particles.jsx';
-import About from './about/about.jsx';
-import Contact from './contact/contact.jsx';
-import Projects from './projects/projects.jsx';
-import { createHashRouter, RouterProvider, Link } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
-import './main.css';
-import HomeButton from './homebutton.jsx';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './app.jsx';
 import aboutpic from './images/aboutpic.webp';
+import './main.css';
 
 const preloadImg = new Image();
 preloadImg.src = aboutpic;
 
-const root = createRoot(document.getElementById("root"));
-
-function Homepage() {
-  return (
-    <AnimatePresence mode="wait">
-      <div className="relative z-10">
-        <Body />
-      </div>
-    </AnimatePresence>
-  );
-}
-
-const router = createHashRouter([
-  {path: '/', element: <Homepage />},
-  {path: '/about', element: <About />},
-  {path: '/contact', element: <Contact />},
-  {path: '/projects', element: <Projects />}
-])
-
-root.render(
+createRoot(document.getElementById('root')).render(
   <StrictMode>
-    
-    <div className="min-h-screen bg-black relative" style={{minHeight: '100vh'}}>
-      {}
-      <div className="absolute inset-0">
-        <Particles
-          particleColors={['#ffffffff', '#ffffffff']}
-          particleCount={1000}
-          particleSpread={10}
-          speed={0.02} 
-          particleBaseSize={75}
-          moveParticlesOnHover={false}
-          alphaParticles={false}
-          disableRotation={false}
-        />
-        
-      </div>
-    
-      {}
-      <div className="relative z-10">
-        <RouterProvider router={router} />
-        
-        </div>
-    </div>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </StrictMode>
-)
+);
