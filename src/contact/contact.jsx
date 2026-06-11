@@ -1,4 +1,4 @@
-import { Reveal, Kicker } from '../components/motion.jsx';
+import { Reveal, Kicker, Magnetic } from '../components/motion.jsx';
 
 const socials = [
   {
@@ -60,32 +60,36 @@ export default function Contact() {
           </p>
         </Reveal>
 
-        <Reveal delay={0.4}>
-          <a
-            href="mailto:r584li@uwaterloo.ca"
-            className="group relative mt-12 inline-block font-serif text-2xl sm:text-3xl text-white"
-          >
-            r584li@uwaterloo.ca
-            <span className="absolute -bottom-2 left-0 h-px w-full bg-white/20" />
-            <span className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-500 ease-out group-hover:scale-x-100" />
-          </a>
+        <Reveal delay={0.4} className="mt-12">
+          <Magnetic strength={0.15}>
+            <a
+              href="mailto:r584li@uwaterloo.ca"
+              className="group relative inline-block font-serif text-2xl sm:text-3xl text-white"
+            >
+              r584li@uwaterloo.ca
+              <span className="absolute -bottom-2 left-0 h-px w-full bg-white/20" />
+              <span className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-500 ease-out group-hover:scale-x-100" />
+            </a>
+          </Magnetic>
         </Reveal>
 
         <div className="mt-16 flex items-center gap-4">
           {socials.map(({ label, href, icon }, i) => (
             <Reveal key={label} delay={0.55 + i * 0.1}>
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm text-neutral-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.06] hover:text-white"
-              >
-                <span className="text-neutral-500 transition-colors duration-300 group-hover:text-white">
-                  {icon}
-                </span>
-                {label}
-                <ExternalArrow />
-              </a>
+              <Magnetic strength={0.35}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm text-neutral-300 transition-all duration-300 hover:border-white/25 hover:bg-white/[0.06] hover:text-white"
+                >
+                  <span className="text-neutral-500 transition-colors duration-300 group-hover:text-white">
+                    {icon}
+                  </span>
+                  {label}
+                  <ExternalArrow />
+                </a>
+              </Magnetic>
             </Reveal>
           ))}
         </div>

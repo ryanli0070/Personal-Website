@@ -1,5 +1,64 @@
+import {
+  motion,
+  useSpring,
+  useMotionTemplate,
+  useReducedMotion,
+} from 'framer-motion';
 import aboutpic from '../images/aboutpic.webp';
 import { Reveal, Kicker } from '../components/motion.jsx';
+
+const MotionDiv = motion.div;
+
+const TILT_SPRING = { stiffness: 150, damping: 18 };
+
+function TiltPortrait() {
+  const reduce = useReducedMotion();
+  const rotateX = useSpring(0, TILT_SPRING);
+  const rotateY = useSpring(0, TILT_SPRING);
+  const glareX = useSpring(50, TILT_SPRING);
+  const glareY = useSpring(50, TILT_SPRING);
+  const glare = useMotionTemplate`radial-gradient(240px circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.16), transparent 70%)`;
+
+  const handleMove = (e) => {
+    if (reduce) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    rotateY.set(px * 14);
+    rotateX.set(-py * 14);
+    glareX.set((px + 0.5) * 100);
+    glareY.set((py + 0.5) * 100);
+  };
+
+  const reset = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+    glareX.set(50);
+    glareY.set(50);
+  };
+
+  return (
+    <div className="group relative" style={{ perspective: 800 }}>
+      <div className="absolute -inset-4 rounded-3xl bg-white/[0.07] blur-2xl opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+      <MotionDiv
+        onMouseMove={handleMove}
+        onMouseLeave={reset}
+        style={{ rotateX, rotateY }}
+        className="relative overflow-hidden rounded-2xl ring-1 ring-white/15"
+      >
+        <img
+          src={aboutpic}
+          alt="Picture of Ryan"
+          className="w-56 sm:w-72 object-cover"
+        />
+        <MotionDiv
+          style={{ background: glare }}
+          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        />
+      </MotionDiv>
+    </div>
+  );
+}
 
 export default function About() {
   return (
@@ -52,14 +111,7 @@ export default function About() {
           </div>
 
           <Reveal delay={0.3} className="shrink-0">
-            <div className="group relative">
-              <div className="absolute -inset-4 rounded-3xl bg-white/[0.07] blur-2xl opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
-              <img
-                src={aboutpic}
-                alt="Picture of Ryan"
-                className="relative w-56 sm:w-72 rounded-2xl object-cover ring-1 ring-white/15 transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-              />
-            </div>
+            <TiltPortrait />
           </Reveal>
         </div>
       </div>

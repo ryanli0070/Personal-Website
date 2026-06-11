@@ -1,7 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from 'framer-motion';
 import Particles from './homepage/particles.jsx';
+import { triggerWarp } from './homepage/warp.js';
 import Nav from './components/nav.jsx';
 import Home from './homepage/body.jsx';
 import About from './about/about.jsx';
@@ -11,12 +17,34 @@ import { EASE } from './components/easing.js';
 
 const PageTransition = motion.div;
 
+// each destination gets its own jump heading: a lateral tilt that shifts
+// the warp's vanishing point, plus forward/reverse from the nav order
+const ROUTE_ORDER = { '/': 0, '/about': 1, '/projects': 2, '/contact': 3 };
+const ROUTE_TILT = {
+  '/': [0, 0],
+  '/about': [-0.6, 0.25],
+  '/projects': [0.6, 0.25],
+  '/contact': [0, -0.6],
+};
+
 export default function App() {
   const location = useLocation();
+  const reduceMotion = useReducedMotion();
+  const prevPath = useRef(location.pathname);
 
   useEffect(() => {
     document.getElementById('root')?.scrollTo(0, 0);
-  }, [location.pathname]);
+    const from = prevPath.current;
+    const to = location.pathname;
+    if (from === to) return;
+    prevPath.current = to;
+    if (!reduceMotion) {
+      const forward =
+        (ROUTE_ORDER[to] ?? 0) >= (ROUTE_ORDER[from] ?? 0) ? 1 : -1;
+      const [x, y] = ROUTE_TILT[to] ?? [0, 0];
+      triggerWarp({ x, y, z: forward });
+    }
+  }, [location.pathname, reduceMotion]);
 
   return (
     <MotionConfig reducedMotion="user">

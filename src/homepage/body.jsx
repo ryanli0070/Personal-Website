@@ -1,6 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useReducedMotion,
+} from 'framer-motion';
 import { EASE } from '../components/easing.js';
 
 const MotionH1 = motion.h1;
@@ -27,12 +32,70 @@ const quickLinks = [
   { to: '/contact', label: 'Contact' },
 ];
 
+function MagneticLetter({ char, mouseX, mouseY }) {
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const x = useSpring(0, { stiffness: 120, damping: 14, mass: 0.5 });
+  const y = useSpring(0, { stiffness: 120, damping: 14, mass: 0.5 });
+
+  useEffect(() => {
+    if (reduce) return;
+    const RADIUS = 160;
+    const PUSH = 26;
+
+    const update = () => {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const dx = mouseX.get() - (rect.left + rect.width / 2);
+      const dy = mouseY.get() - (rect.top + rect.height / 2);
+      const dist = Math.hypot(dx, dy);
+      if (dist > 0 && dist < RADIUS) {
+        const force = ((RADIUS - dist) / RADIUS) * PUSH;
+        x.set((-dx / dist) * force);
+        y.set((-dy / dist) * force);
+      } else {
+        x.set(0);
+        y.set(0);
+      }
+    };
+
+    const unsubX = mouseX.on('change', update);
+    const unsubY = mouseY.on('change', update);
+    return () => {
+      unsubX();
+      unsubY();
+    };
+  }, [reduce, mouseX, mouseY, x, y]);
+
+  return (
+    <MotionSpan
+      ref={ref}
+      aria-hidden="true"
+      variants={letterVariants}
+      className="inline-block"
+    >
+      <MotionSpan style={{ x, y }} className="inline-block">
+        {char}
+      </MotionSpan>
+    </MotionSpan>
+  );
+}
+
 export default function Home() {
   const played = hasPlayed;
+  const mouseX = useMotionValue(-9999);
+  const mouseY = useMotionValue(-9999);
 
   useEffect(() => {
     hasPlayed = true;
-  }, []);
+    const onMove = (e) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [mouseX, mouseY]);
 
   return (
     <section className="min-h-screen flex flex-col items-center justify-center px-6">
@@ -46,14 +109,12 @@ export default function Home() {
         className="font-serif text-7xl sm:text-8xl lg:text-9xl font-semibold text-white tracking-tight text-center"
       >
         {NAME.split('').map((char, i) => (
-          <MotionSpan
+          <MagneticLetter
             key={i}
-            aria-hidden="true"
-            variants={letterVariants}
-            className="inline-block"
-          >
-            {char === ' ' ? ' ' : char}
-          </MotionSpan>
+            char={char === ' ' ? ' ' : char}
+            mouseX={mouseX}
+            mouseY={mouseY}
+          />
         ))}
       </MotionH1>
 

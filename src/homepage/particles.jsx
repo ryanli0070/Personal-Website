@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Renderer, Camera, Geometry, Program, Mesh } from 'ogl';
+import { getWarpRequestedAt, getWarpDirection } from './warp.js';
 
 //import './Particles.css';
 
@@ -32,17 +33,29 @@ const vertex = /* glsl */ `
   uniform float uSpread;
   uniform float uBaseSize;
   uniform float uSizeRandomness;
-  
+  uniform float uWarp;
+  uniform vec3 uWarpVel;
+  uniform vec3 uWarpOff;
+
   varying vec4 vRandom;
   varying vec3 vColor;
-  
+  varying vec2 vDir;
+
   void main() {
     vRandom = random;
     vColor = color;
-    
+
     vec3 pos = position * uSpread;
     pos.z *= 10.0;
-    
+
+    // warp travel: fly through the field along the jump heading,
+    // recycling particles by wrapping each axis
+    float xyRange = uSpread;
+    float zRange = uSpread * 10.0;
+    pos.x = mod(pos.x + uWarpOff.x + xyRange, 2.0 * xyRange) - xyRange;
+    pos.y = mod(pos.y + uWarpOff.y + xyRange, 2.0 * xyRange) - xyRange;
+    pos.z = mod(pos.z + uWarpOff.z + zRange, 2.0 * zRange) - zRange;
+
     vec4 mPos = modelMatrix * vec4(pos, 1.0);
     float t = uTime;
     mPos.x += sin(t * random.z + 6.28 * random.w) * mix(0.1, 1.5, random.x);
@@ -56,8 +69,17 @@ const vertex = /* glsl */ `
     } else {
       gl_PointSize = (uBaseSize * (1.0 + uSizeRandomness * (random.x - 0.5))) / length(mvPos.xyz);
     }
+    gl_PointSize *= 1.0 + uWarp * 12.0;
+    // keep close fly-bys as tight streaks instead of giant fuzzy discs
+    gl_PointSize = min(gl_PointSize, mix(1000.0, 160.0, uWarp));
 
     gl_Position = projectionMatrix * mvPos;
+
+    // screen-space motion direction, for orienting warp streaks
+    vec4 clipPrev = projectionMatrix * viewMatrix * modelMatrix * vec4(pos - uWarpVel * 4.0, 1.0);
+    vec2 ndcNow = gl_Position.xy / max(gl_Position.w, 0.0001);
+    vec2 ndcPrev = clipPrev.xy / max(clipPrev.w, 0.0001);
+    vDir = ndcNow - ndcPrev;
   }
 `;
 
@@ -66,13 +88,29 @@ const fragment = /* glsl */ `
   
   uniform float uTime;
   uniform float uAlphaParticles;
+  uniform float uWarp;
   varying vec4 vRandom;
   varying vec3 vColor;
-  
+  varying vec2 vDir;
+
   void main() {
     vec2 uv = gl_PointCoord.xy;
-    float d = length(uv - vec2(0.5));
-    
+    vec2 p = uv - vec2(0.5);
+    float d = length(p);
+
+    // streak along the particle's screen-space motion: a soft gaussian
+    // capsule, cross-faded with the resting dot by uWarp
+    float w = clamp(uWarp, 0.0, 1.0);
+    vec2 dir = vec2(1.0, 0.0);
+    float dirLen = length(vDir);
+    if (dirLen > 0.00001) {
+      // gl_PointCoord y is inverted relative to NDC
+      dir = vec2(vDir.x, -vDir.y) / dirLen;
+    }
+    float along = dot(p, dir);
+    float perp = dot(p, vec2(-dir.y, dir.x));
+    float streak = exp(-perp * perp * 60.0) * exp(-along * along * 4.0);
+
     if(uAlphaParticles < 0.5) {
       if(d > 0.5) {
         discard;
@@ -80,7 +118,8 @@ const fragment = /* glsl */ `
       gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), 1.0);
     } else {
       float circle = smoothstep(0.5, 0.4, d) * 0.8;
-      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), circle);
+      float alpha = mix(circle, streak, w);
+      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), alpha);
     }
   }
 `;
@@ -169,7 +208,10 @@ const Particles = ({
         uSpread: { value: particleSpread },
         uBaseSize: { value: particleBaseSize },
         uSizeRandomness: { value: sizeRandomness },
-        uAlphaParticles: { value: alphaParticles ? 1 : 0 }
+        uAlphaParticles: { value: alphaParticles ? 1 : 0 },
+        uWarp: { value: 0 },
+        uWarpVel: { value: [0, 0, 0.5] },
+        uWarpOff: { value: [0, 0, 0] }
       },
       transparent: true,
       depthTest: false
@@ -181,6 +223,12 @@ const Particles = ({
     let lastTime = performance.now();
     let elapsed = 0;
 
+    // start at full warp so the site "arrives" out of hyperspace on load
+    let warpAmount = 1;
+    const WARP_HOLD_MS = 450;
+    const xyWrap = particleSpread * 2;
+    const zWrap = particleSpread * 20;
+
     const update = t => {
       animationFrameId = requestAnimationFrame(update);
       const delta = t - lastTime;
@@ -188,6 +236,22 @@ const Particles = ({
       elapsed += delta * speed;
 
       program.uniforms.uTime.value = elapsed * 0.001;
+
+      const sinceWarp = t - getWarpRequestedAt();
+      const warpTarget = sinceWarp < WARP_HOLD_MS ? 1 : 0;
+      const tau = warpTarget > warpAmount ? 90 : 280;
+      warpAmount += (warpTarget - warpAmount) * (1 - Math.exp(-delta / tau));
+
+      const dir = getWarpDirection();
+      const vel = program.uniforms.uWarpVel.value;
+      const off = program.uniforms.uWarpOff.value;
+      vel[0] = dir.x * 0.07;
+      vel[1] = dir.y * 0.07;
+      vel[2] = dir.z * 0.6;
+      off[0] = (off[0] + warpAmount * delta * vel[0]) % xyWrap;
+      off[1] = (off[1] + warpAmount * delta * vel[1]) % xyWrap;
+      off[2] = (off[2] + warpAmount * delta * vel[2]) % zWrap;
+      program.uniforms.uWarp.value = warpAmount;
 
       if (moveParticlesOnHover) {
         const targetX = -mouseRef.current.x * particleHoverFactor;

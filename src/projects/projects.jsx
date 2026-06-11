@@ -1,6 +1,8 @@
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
 import { EASE } from '../components/easing.js';
 import { Reveal, Kicker } from '../components/motion.jsx';
+
+const MotionDiv = motion.div;
 
 const projects = [
   {
@@ -49,14 +51,30 @@ function ProjectRow({ index, title, description, stack, url, delay }) {
     ? { href: url, target: '_blank', rel: 'noopener noreferrer' }
     : {};
 
+  const spotX = useMotionValue(0);
+  const spotY = useMotionValue(0);
+  const spotlight = useMotionTemplate`radial-gradient(420px circle at ${spotX}px ${spotY}px, rgba(255,255,255,0.06), transparent 70%)`;
+
+  const handleMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    spotX.set(e.clientX - rect.left);
+    spotY.set(e.clientY - rect.top);
+  };
+
   return (
     <Tag
       {...linkProps}
+      onMouseMove={handleMove}
       initial={{ opacity: 0, y: 28, filter: 'blur(8px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.8, ease: EASE, delay }}
-      className="group grid grid-cols-[3rem_1fr_auto] items-baseline gap-x-4 sm:gap-x-6 py-10 transition-all duration-500 hover:pl-3"
+      className="group relative grid grid-cols-[3rem_1fr_auto] items-baseline gap-x-4 sm:gap-x-6 py-10 transition-all duration-500 hover:pl-3"
     >
+      <MotionDiv
+        style={{ background: spotlight }}
+        className="pointer-events-none absolute -inset-x-6 inset-y-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+      />
+
       <span className="font-serif italic text-sm text-neutral-600 transition-colors duration-500 group-hover:text-neutral-400">
         {String(index).padStart(2, '0')}
       </span>

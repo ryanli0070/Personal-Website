@@ -1,7 +1,10 @@
-import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { motion, useSpring, useReducedMotion } from 'framer-motion';
 import { EASE } from './easing.js';
 
 const MotionDiv = motion.div;
+
+const MAGNET_SPRING = { stiffness: 180, damping: 14, mass: 0.4 };
 
 export function Reveal({ children, delay = 0, className }) {
   return (
@@ -29,5 +32,36 @@ export function Kicker({ index, children, delay = 0, className = '' }) {
         <span>{children}</span>
       </div>
     </Reveal>
+  );
+}
+
+export function Magnetic({ children, strength = 0.3, className = '' }) {
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const x = useSpring(0, MAGNET_SPRING);
+  const y = useSpring(0, MAGNET_SPRING);
+
+  const handleMove = (e) => {
+    if (reduce || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    x.set((e.clientX - (rect.left + rect.width / 2)) * strength);
+    y.set((e.clientY - (rect.top + rect.height / 2)) * strength);
+  };
+
+  const reset = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <MotionDiv
+      ref={ref}
+      style={{ x, y }}
+      onMouseMove={handleMove}
+      onMouseLeave={reset}
+      className={`inline-block ${className}`}
+    >
+      {children}
+    </MotionDiv>
   );
 }
