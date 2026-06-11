@@ -52,7 +52,7 @@ export default function App() {
         <div className="fixed inset-0 z-0">
           <Particles
             particleColors={['#ffffff', '#ffffff']}
-            particleCount={1000}
+            particleCount={2000}
             particleSpread={10}
             speed={0.02}
             particleBaseSize={75}

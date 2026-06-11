@@ -34,12 +34,10 @@ const vertex = /* glsl */ `
   uniform float uBaseSize;
   uniform float uSizeRandomness;
   uniform float uWarp;
-  uniform vec3 uWarpVel;
   uniform vec3 uWarpOff;
 
   varying vec4 vRandom;
   varying vec3 vColor;
-  varying vec2 vDir;
 
   void main() {
     vRandom = random;
@@ -69,17 +67,11 @@ const vertex = /* glsl */ `
     } else {
       gl_PointSize = (uBaseSize * (1.0 + uSizeRandomness * (random.x - 0.5))) / length(mvPos.xyz);
     }
-    gl_PointSize *= 1.0 + uWarp * 12.0;
-    // keep close fly-bys as tight streaks instead of giant fuzzy discs
-    gl_PointSize = min(gl_PointSize, mix(1000.0, 160.0, uWarp));
+    // a gentle swell during warp; particles stay round dots throughout
+    gl_PointSize *= 1.0 + uWarp * 0.5;
+    gl_PointSize = min(gl_PointSize, mix(56.0, 72.0, uWarp));
 
     gl_Position = projectionMatrix * mvPos;
-
-    // screen-space motion direction, for orienting warp streaks
-    vec4 clipPrev = projectionMatrix * viewMatrix * modelMatrix * vec4(pos - uWarpVel * 4.0, 1.0);
-    vec2 ndcNow = gl_Position.xy / max(gl_Position.w, 0.0001);
-    vec2 ndcPrev = clipPrev.xy / max(clipPrev.w, 0.0001);
-    vDir = ndcNow - ndcPrev;
   }
 `;
 
@@ -91,25 +83,11 @@ const fragment = /* glsl */ `
   uniform float uWarp;
   varying vec4 vRandom;
   varying vec3 vColor;
-  varying vec2 vDir;
 
   void main() {
     vec2 uv = gl_PointCoord.xy;
-    vec2 p = uv - vec2(0.5);
-    float d = length(p);
-
-    // streak along the particle's screen-space motion: a soft gaussian
-    // capsule, cross-faded with the resting dot by uWarp
+    float d = length(uv - vec2(0.5));
     float w = clamp(uWarp, 0.0, 1.0);
-    vec2 dir = vec2(1.0, 0.0);
-    float dirLen = length(vDir);
-    if (dirLen > 0.00001) {
-      // gl_PointCoord y is inverted relative to NDC
-      dir = vec2(vDir.x, -vDir.y) / dirLen;
-    }
-    float along = dot(p, dir);
-    float perp = dot(p, vec2(-dir.y, dir.x));
-    float streak = exp(-perp * perp * 60.0) * exp(-along * along * 4.0);
 
     if(uAlphaParticles < 0.5) {
       if(d > 0.5) {
@@ -117,9 +95,9 @@ const fragment = /* glsl */ `
       }
       gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), 1.0);
     } else {
-      float circle = smoothstep(0.5, 0.4, d) * 0.8;
-      float alpha = mix(circle, streak, w);
-      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), alpha);
+      // round soft dot always; just a touch brighter at full warp
+      float circle = smoothstep(0.5, 0.4, d) * mix(0.8, 1.0, w);
+      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), circle);
     }
   }
 `;
@@ -180,15 +158,12 @@ const Particles = ({
     const palette = particleColors && particleColors.length > 0 ? particleColors : defaultColors;
 
     for (let i = 0; i < count; i++) {
-      let x, y, z, len;
-      do {
-        x = Math.random() * 2 - 1;
-        y = Math.random() * 2 - 1;
-        z = Math.random() * 2 - 1;
-        len = x * x + y * y + z * z;
-      } while (len > 1 || len === 0);
-      const r = Math.cbrt(Math.random());
-      positions.set([x * r, y * r, z * r], i * 3);
+      // uniform box so the field covers the view evenly (a long tunnel
+      // once z is stretched in the shader) with no clumps or gaps
+      const x = Math.random() * 2 - 1;
+      const y = Math.random() * 2 - 1;
+      const z = Math.random() * 2 - 1;
+      positions.set([x, y, z], i * 3);
       randoms.set([Math.random(), Math.random(), Math.random(), Math.random()], i * 4);
       const col = hexToRgb(palette[Math.floor(Math.random() * palette.length)]);
       colors.set(col, i * 3);
@@ -210,7 +185,6 @@ const Particles = ({
         uSizeRandomness: { value: sizeRandomness },
         uAlphaParticles: { value: alphaParticles ? 1 : 0 },
         uWarp: { value: 0 },
-        uWarpVel: { value: [0, 0, 0.5] },
         uWarpOff: { value: [0, 0, 0] }
       },
       transparent: true,
@@ -243,14 +217,10 @@ const Particles = ({
       warpAmount += (warpTarget - warpAmount) * (1 - Math.exp(-delta / tau));
 
       const dir = getWarpDirection();
-      const vel = program.uniforms.uWarpVel.value;
       const off = program.uniforms.uWarpOff.value;
-      vel[0] = dir.x * 0.07;
-      vel[1] = dir.y * 0.07;
-      vel[2] = dir.z * 0.6;
-      off[0] = (off[0] + warpAmount * delta * vel[0]) % xyWrap;
-      off[1] = (off[1] + warpAmount * delta * vel[1]) % xyWrap;
-      off[2] = (off[2] + warpAmount * delta * vel[2]) % zWrap;
+      off[0] = (off[0] + warpAmount * delta * dir.x * 0.07) % xyWrap;
+      off[1] = (off[1] + warpAmount * delta * dir.y * 0.07) % xyWrap;
+      off[2] = (off[2] + warpAmount * delta * dir.z * 0.6) % zWrap;
       program.uniforms.uWarp.value = warpAmount;
 
       if (moveParticlesOnHover) {
