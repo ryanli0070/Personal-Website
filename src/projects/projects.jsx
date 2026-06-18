@@ -1,5 +1,4 @@
 import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { EASE } from '../components/easing.js';
 import { Reveal, Kicker } from '../components/motion.jsx';
 
 const MotionDiv = motion.div;
@@ -15,8 +14,8 @@ const projects = [
   {
     title: 'MacroBud',
     description: 'A streamlined macro-nutrient tracker using AI parsing.',
-    stack: ['React.js', 'Node.js', 'MySQL'],
-    url: null,
+    stack: ['React.js', 'FastAPI', 'SQLite'],
+    url: 'https://github.com/ryanli0070/MacroBud',
   },
   {
     title: 'Twovie',
@@ -45,7 +44,7 @@ function ArrowIcon() {
   );
 }
 
-function ProjectRow({ index, title, description, stack, url, delay }) {
+function ProjectRow({ index, title, description, stack, url }) {
   const Tag = url ? motion.a : motion.div;
   const linkProps = url
     ? { href: url, target: '_blank', rel: 'noopener noreferrer' }
@@ -65,9 +64,6 @@ function ProjectRow({ index, title, description, stack, url, delay }) {
     <Tag
       {...linkProps}
       onMouseMove={handleMove}
-      initial={{ opacity: 0, y: 28, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.8, ease: EASE, delay }}
       className="group relative grid grid-cols-[3rem_1fr_auto] items-baseline gap-x-4 sm:gap-x-6 py-10 transition-all duration-500 hover:pl-3"
     >
       <MotionDiv
@@ -116,12 +112,7 @@ export default function Projects() {
 
         <div className="divide-y divide-white/10 border-y border-white/10">
           {projects.map((project, i) => (
-            <ProjectRow
-              key={project.title}
-              index={i + 1}
-              delay={0.3 + i * 0.12}
-              {...project}
-            />
+            <ProjectRow key={project.title} index={i + 1} {...project} />
           ))}
         </div>
       </div>

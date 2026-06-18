@@ -95,7 +95,7 @@ export default function About() {
 
             <Reveal delay={0.45}>
               <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
-                I&apos;m in my co-op term, currently seeking a fall 2026
+                I&apos;m in my 1B study term, currently seeking a fall 2026
                 internship. I&apos;m excited to learn more about fullstack
                 development.
               </p>
