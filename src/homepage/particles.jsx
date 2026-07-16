@@ -35,9 +35,13 @@ const vertex = /* glsl */ `
   uniform float uSizeRandomness;
   uniform float uWarp;
   uniform vec3 uWarpOff;
+  uniform vec3 uWarpVel;
+  uniform vec2 uResolution;
 
   varying vec4 vRandom;
   varying vec3 vColor;
+  varying vec2 vStreakDir;
+  varying float vStretch;
 
   void main() {
     vRandom = random;
@@ -56,22 +60,46 @@ const vertex = /* glsl */ `
 
     vec4 mPos = modelMatrix * vec4(pos, 1.0);
     float t = uTime;
-    mPos.x += sin(t * random.z + 6.28 * random.w) * mix(0.1, 1.5, random.x);
-    mPos.y += sin(t * random.y + 6.28 * random.x) * mix(0.1, 1.5, random.w);
-    mPos.z += sin(t * random.w + 6.28 * random.y) * mix(0.1, 1.5, random.z);
-    
+    vec3 wobble = vec3(
+      sin(t * random.z + 6.28 * random.w) * mix(0.1, 1.5, random.x),
+      sin(t * random.y + 6.28 * random.x) * mix(0.1, 1.5, random.w),
+      sin(t * random.w + 6.28 * random.y) * mix(0.1, 1.5, random.z)
+    );
+    mPos.xyz += wobble;
+
     vec4 mvPos = viewMatrix * mPos;
+    vec4 clip = projectionMatrix * mvPos;
 
+    float size;
     if (uSizeRandomness == 0.0) {
-      gl_PointSize = uBaseSize;
+      size = uBaseSize;
     } else {
-      gl_PointSize = (uBaseSize * (1.0 + uSizeRandomness * (random.x - 0.5))) / length(mvPos.xyz);
+      size = (uBaseSize * (1.0 + uSizeRandomness * (random.x - 0.5))) / length(mvPos.xyz);
     }
-    // a gentle swell during warp; particles stay round dots throughout
-    gl_PointSize *= 1.0 + uWarp * 0.5;
-    gl_PointSize = min(gl_PointSize, mix(56.0, 72.0, uWarp));
+    // a gentle swell during warp
+    size *= 1.0 + uWarp * 0.5;
+    size = min(size, mix(56.0, 72.0, uWarp));
 
-    gl_Position = projectionMatrix * mvPos;
+    // motion streak: re-project the star a beat further along the warp
+    // velocity; its on-screen travel gives the streak direction + length
+    vec4 mPosB = modelMatrix * vec4(pos + uWarpVel, 1.0);
+    mPosB.xyz += wobble;
+    vec4 clipB = projectionMatrix * viewMatrix * mPosB;
+    vec2 ndcA = clip.xy / max(clip.w, 1e-4);
+    vec2 ndcB = clipB.xy / max(clipB.w, 1e-4);
+    vec2 screenVel = (ndcB - ndcA) * uResolution * 0.5;
+    float streak = length(screenVel);
+    float stretch = clamp(1.0 + streak / max(size, 1.0), 1.0, 6.0);
+
+    vStretch = stretch;
+    // gl_PointCoord's y runs top-down, so flip y to match screen space
+    vec2 dir = vec2(1.0, 0.0);
+    if (streak > 1e-3) dir = normalize(screenVel * vec2(1.0, -1.0));
+    vStreakDir = dir;
+
+    // grow the sprite square so the oval's long axis fits inside it
+    gl_PointSize = min(size * stretch, 420.0);
+    gl_Position = clip;
   }
 `;
 
@@ -83,11 +111,19 @@ const fragment = /* glsl */ `
   uniform float uWarp;
   varying vec4 vRandom;
   varying vec3 vColor;
+  varying vec2 vStreakDir;
+  varying float vStretch;
 
   void main() {
     vec2 uv = gl_PointCoord.xy;
-    float d = length(uv - vec2(0.5));
     float w = clamp(uWarp, 0.0, 1.0);
+
+    // measure distance in the streak's frame: squashing the cross axis
+    // turns the dot into a smooth oval with rounded ends, never a bar
+    vec2 p = uv - vec2(0.5);
+    float along = dot(p, vStreakDir);
+    float across = dot(p, vec2(-vStreakDir.y, vStreakDir.x));
+    float d = length(vec2(along, across * vStretch));
 
     if(uAlphaParticles < 0.5) {
       if(d > 0.5) {
@@ -95,9 +131,12 @@ const fragment = /* glsl */ `
       }
       gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), 1.0);
     } else {
-      // round soft dot always; just a touch brighter at full warp
-      float circle = smoothstep(0.5, 0.4, d) * mix(0.8, 1.0, w);
-      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), circle);
+      // soften the falloff as warp ramps so streaks read as motion blur;
+      // brighten to offset the light smearing along the trail
+      float edge = mix(0.4, 0.18, w);
+      float oval = smoothstep(0.5, edge, d) * mix(0.8, 1.35, w);
+      oval *= mix(1.0, inversesqrt(vStretch), 0.6);
+      gl_FragColor = vec4(vColor + 0.2 * sin(uv.yxx + uTime + vRandom.y * 6.28), oval);
     }
   }
 `;
@@ -185,7 +224,9 @@ const Particles = ({
         uSizeRandomness: { value: sizeRandomness },
         uAlphaParticles: { value: alphaParticles ? 1 : 0 },
         uWarp: { value: 0 },
-        uWarpOff: { value: [0, 0, 0] }
+        uWarpOff: { value: [0, 0, 0] },
+        uWarpVel: { value: [0, 0, 0] },
+        uResolution: { value: [1, 1] }
       },
       transparent: true,
       depthTest: false
@@ -222,6 +263,17 @@ const Particles = ({
       off[1] = (off[1] + warpAmount * delta * dir.y * 0.07) % xyWrap;
       off[2] = (off[2] + warpAmount * delta * dir.z * 0.6) % zWrap;
       program.uniforms.uWarp.value = warpAmount;
+
+      // streak lookahead: how many ms of travel each star smears across
+      const STREAK_MS = 60;
+      const vel = program.uniforms.uWarpVel.value;
+      vel[0] = warpAmount * dir.x * 0.07 * STREAK_MS;
+      vel[1] = warpAmount * dir.y * 0.07 * STREAK_MS;
+      vel[2] = warpAmount * dir.z * 0.6 * STREAK_MS;
+
+      const res = program.uniforms.uResolution.value;
+      res[0] = gl.canvas.width;
+      res[1] = gl.canvas.height;
 
       if (moveParticlesOnHover) {
         const targetX = -mouseRef.current.x * particleHoverFactor;
