@@ -13,18 +13,17 @@ import Home from './homepage/body.jsx';
 import About from './about/about.jsx';
 import Contact from './contact/contact.jsx';
 import Projects from './projects/projects.jsx';
-import { EASE } from './components/easing.js';
+import { EASE, EASE_IN } from './components/easing.js';
 
 const PageTransition = motion.div;
 
-// each destination gets its own jump heading: a lateral tilt that shifts
-// the warp's vanishing point, plus forward/reverse from the nav order
+// nav order decides forward vs reverse; the lateral tilt is rolled fresh
+// each jump so the warp's vanishing point lands somewhere new every time
 const ROUTE_ORDER = { '/': 0, '/about': 1, '/projects': 2, '/contact': 3 };
-const ROUTE_TILT = {
-  '/': [0, 0],
-  '/about': [-0.6, 0.25],
-  '/projects': [0.6, 0.25],
-  '/contact': [0, -0.6],
+const randomTilt = () => {
+  const angle = Math.random() * Math.PI * 2;
+  const mag = 0.25 + Math.random() * 0.5;
+  return [Math.cos(angle) * mag, Math.sin(angle) * mag];
 };
 
 export default function App() {
@@ -41,7 +40,7 @@ export default function App() {
     if (!reduceMotion) {
       const forward =
         (ROUTE_ORDER[to] ?? 0) >= (ROUTE_ORDER[from] ?? 0) ? 1 : -1;
-      const [x, y] = ROUTE_TILT[to] ?? [0, 0];
+      const [x, y] = randomTilt();
       triggerWarp({ x, y, z: forward });
     }
   }, [location.pathname, reduceMotion]);
@@ -68,10 +67,21 @@ export default function App() {
           <AnimatePresence mode="wait">
             <PageTransition
               key={location.pathname}
-              initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }}
-              transition={{ duration: 0.5, ease: EASE }}
+              initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                // hang in pure starfield for a beat, then glide in slow
+                transition: { duration: 1.0, ease: EASE, delay: 0.15 },
+              }}
+              exit={{
+                opacity: 0,
+                y: -24,
+                filter: 'blur(8px)',
+                // accelerate away as the warp spools up
+                transition: { duration: 0.6, ease: EASE_IN },
+              }}
             >
               <Routes location={location}>
                 <Route path="/" element={<Home />} />

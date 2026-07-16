@@ -80,14 +80,13 @@ const vertex = /* glsl */ `
     size *= 1.0 + uWarp * 0.5;
     size = min(size, mix(56.0, 72.0, uWarp));
 
-    // motion streak: re-project the star a beat further along the warp
-    // velocity; its on-screen travel gives the streak direction + length
-    vec4 mPosB = modelMatrix * vec4(pos + uWarpVel, 1.0);
-    mPosB.xyz += wobble;
-    vec4 clipB = projectionMatrix * viewMatrix * mPosB;
-    vec2 ndcA = clip.xy / max(clip.w, 1e-4);
-    vec2 ndcB = clipB.xy / max(clipB.w, 1e-4);
-    vec2 screenVel = (ndcB - ndcA) * uResolution * 0.5;
+    // motion streak: exact screen-space velocity via the projection's
+    // derivative at the star's current spot — a two-point lookahead would
+    // cross the camera plane on forward jumps and skew the direction
+    vec4 clipV = projectionMatrix * viewMatrix * modelMatrix * vec4(uWarpVel, 0.0);
+    float wA = max(clip.w, 1e-4);
+    vec2 ndcA = clip.xy / wA;
+    vec2 screenVel = (clipV.xy - ndcA * clipV.w) / wA * uResolution * 0.5;
     float streak = length(screenVel);
     float stretch = clamp(1.0 + streak / max(size, 1.0), 1.0, 6.0);
 
@@ -240,7 +239,7 @@ const Particles = ({
 
     // start at full warp so the site "arrives" out of hyperspace on load
     let warpAmount = 1;
-    const WARP_HOLD_MS = 450;
+    const WARP_HOLD_MS = 1000;
     const xyWrap = particleSpread * 2;
     const zWrap = particleSpread * 20;
 
@@ -254,22 +253,34 @@ const Particles = ({
 
       const sinceWarp = t - getWarpRequestedAt();
       const warpTarget = sinceWarp < WARP_HOLD_MS ? 1 : 0;
-      const tau = warpTarget > warpAmount ? 90 : 280;
+      // slow spin-up, even slower wind-down: a real accel/decel arc
+      const tau = warpTarget > warpAmount ? 220 : 600;
       warpAmount += (warpTarget - warpAmount) * (1 - Math.exp(-delta / tau));
 
+      // the heading is meant camera-relative, but travel happens in the
+      // field's local axes and the field slowly tumbles — counter-rotate
+      // the heading (Rᵀ·v) so the vanishing point lands where dir says
       const dir = getWarpDirection();
+      const m = particles.worldMatrix;
+      const wx = dir.x * 0.07;
+      const wy = dir.y * 0.07;
+      const wz = dir.z * 0.6;
+      const vx = m[0] * wx + m[1] * wy + m[2] * wz;
+      const vy = m[4] * wx + m[5] * wy + m[6] * wz;
+      const vz = m[8] * wx + m[9] * wy + m[10] * wz;
+
       const off = program.uniforms.uWarpOff.value;
-      off[0] = (off[0] + warpAmount * delta * dir.x * 0.07) % xyWrap;
-      off[1] = (off[1] + warpAmount * delta * dir.y * 0.07) % xyWrap;
-      off[2] = (off[2] + warpAmount * delta * dir.z * 0.6) % zWrap;
+      off[0] = (off[0] + warpAmount * delta * vx) % xyWrap;
+      off[1] = (off[1] + warpAmount * delta * vy) % xyWrap;
+      off[2] = (off[2] + warpAmount * delta * vz) % zWrap;
       program.uniforms.uWarp.value = warpAmount;
 
       // streak lookahead: how many ms of travel each star smears across
       const STREAK_MS = 60;
       const vel = program.uniforms.uWarpVel.value;
-      vel[0] = warpAmount * dir.x * 0.07 * STREAK_MS;
-      vel[1] = warpAmount * dir.y * 0.07 * STREAK_MS;
-      vel[2] = warpAmount * dir.z * 0.6 * STREAK_MS;
+      vel[0] = warpAmount * vx * STREAK_MS;
+      vel[1] = warpAmount * vy * STREAK_MS;
+      vel[2] = warpAmount * vz * STREAK_MS;
 
       const res = program.uniforms.uResolution.value;
       res[0] = gl.canvas.width;
