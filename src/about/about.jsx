@@ -82,7 +82,7 @@ export default function About() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-                Seeking Fall 2026 internships
+                Seeking Summer 2027 internships
               </div>
             </Reveal>
 
@@ -95,8 +95,8 @@ export default function About() {
 
             <Reveal delay={0.45}>
               <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
-                I&apos;m in my 1B study term, currently seeking a fall 2026
-                internship. I&apos;m excited to learn more about fullstack
+                I&apos;m in my 2nd year of University, currently seeking a Summer 2027
+                internship. I&apos;m excited to learn more about software
                 development.
               </p>
             </Reveal>
@@ -105,7 +105,7 @@ export default function About() {
               <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
                 In my free time, I enjoy playing basketball &amp; volleyball,
                 going to the gym, and cooking new recipes. Feel free to reach
-                out&mdash;I would love to chat!
+                out, I would love to chat!
               </p>
             </Reveal>
           </div>
