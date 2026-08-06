@@ -15,7 +15,7 @@ const projects = [
     description:
       'An AI tutor whiteboard app that verifies handwritten math and guides students with hints to solutions.',
     stack: ['React', 'Python', 'Postgres', 'AWS'],
-    url: 'https://github.com/ryanli0070/EuraAI',
+    url: 'https://apps.apple.com/ca/app/eura-learn/id6780240119',
     demo: '/eura-demo.mp4',
   },
   {
