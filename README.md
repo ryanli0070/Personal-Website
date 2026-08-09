@@ -1,3 +1,2 @@
 ﻿# Personal-Website
-A modern, responsive personal website built using **React**, **Vite**, and **Tailwind CSS**.  
-This site showcases my projects, skills, and experience — designed for performance, simplicity, and scalability.
+Cool portfolio, check it out!
