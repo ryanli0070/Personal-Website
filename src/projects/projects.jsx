@@ -11,12 +11,34 @@ const MotionDiv = motion.div;
 
 const projects = [
   {
+    title: 'Scout',
+    description:
+      'A lidar-equipped rover that scans buildings and checks clearances to assess accessibility.',
+    award: '2nd Place · TigerData Track · Hack the North 2026',
+    stack: ['React', 'TypeScript', 'Python', 'TimescaleDB'],
+    url: 'https://devpost.com/software/scoutable',
+    media: [
+      { type: 'video', src: '/scout-demo.mp4', ratio: '9 / 16' },
+      { type: 'image', src: '/scout-rover.jpg', ratio: '3 / 4', alt: 'The Scout rover with its lidar sensor' },
+    ],
+  },
+  {
+    title: 'Folio',
+    description:
+      'A centralized project sharing platform that puts all your GitHub, Devpost and demo links in one place.',
+    stack: ['Next.js', 'TypeScript', 'Postgres', 'Drizzle'],
+    url: 'https://folio-share.vercel.app',
+    media: [
+      { type: 'image', src: '/folio.jpg', ratio: '1600 / 912', alt: 'A Folio profile page with pinned projects' },
+    ],
+  },
+  {
     title: 'Eura',
     description:
       'An AI tutor whiteboard app that verifies handwritten math and guides students with hints to solutions.',
     stack: ['React', 'Python', 'Postgres', 'AWS'],
     url: 'https://apps.apple.com/ca/app/eura-learn/id6780240119',
-    demo: '/eura-demo.mp4',
+    media: [{ type: 'video', src: '/eura-demo.mp4' }],
   },
   {
     title: 'Shogun Showdown',
@@ -24,6 +46,9 @@ const projects = [
       'A local 2D multiplayer platform fighting game inspired by Super Smash Bros.',
     stack: ['MonoGame', '.NET', 'C#'],
     url: 'https://github.com/ryanli0070/Shogun-Showdown',
+    media: [
+      { type: 'video', src: '/shogun-demo.mp4', poster: '/shogun-poster.jpg', ratio: '1504 / 852' },
+    ],
   },
   {
     title: 'MacroBud',
@@ -37,6 +62,9 @@ const projects = [
       'A movie search tool that helps users discover films based on preferences.',
     stack: ['Python', 'HTML'],
     url: 'https://github.com/ThomasZhang223/Jamhacks-7',
+    media: [
+      { type: 'image', src: '/twovie.jpg', ratio: '548 / 678', alt: 'The Twovie app menu' },
+    ],
   },
 ];
 
@@ -58,13 +86,44 @@ function ArrowIcon() {
   );
 }
 
-function ProjectRow({ index, title, description, stack, url, demo }) {
+function MediaItem({ type, src, poster, alt, ratio = '16 / 9', single }) {
+  const [w, h] = ratio.split('/').map(Number);
+  const portrait = w < h;
+  const sizing = portrait
+    ? 'h-[26rem] sm:h-[32rem] max-h-[70vh] max-w-full'
+    : single
+      ? 'w-full max-w-3xl'
+      : 'w-full sm:w-auto sm:h-[24rem] max-w-full';
+  const className = `${sizing} rounded-xl border border-white/10 object-cover shadow-2xl shadow-black/40`;
+  const style = { aspectRatio: ratio };
+
+  if (type === 'video') {
+    return (
+      <video
+        src={src}
+        poster={poster}
+        controls
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        style={style}
+        className={className}
+      />
+    );
+  }
+  return <img src={src} alt={alt} loading="lazy" style={style} className={className} />;
+}
+
+function ProjectRow({ index, title, description, award, stack, url, media }) {
   const Tag = url ? motion.a : motion.div;
   const linkProps = url
     ? { href: url, target: '_blank', rel: 'noopener noreferrer' }
     : {};
 
   const [showDemo, setShowDemo] = useState(false);
+  const hasVideo = media?.some((m) => m.type === 'video');
 
   const spotX = useMotionValue(0);
   const spotY = useMotionValue(0);
@@ -96,6 +155,9 @@ function ProjectRow({ index, title, description, stack, url, demo }) {
 
         <div>
           <h2 className="font-serif text-3xl sm:text-4xl text-white">{title}</h2>
+          {award && (
+            <p className="mt-2 font-serif italic text-sm text-amber-200/80">{award}</p>
+          )}
           <p className="mt-3 max-w-xl text-neutral-400 leading-relaxed transition-colors duration-500 group-hover:text-neutral-300">
             {description}
           </p>
@@ -112,7 +174,7 @@ function ProjectRow({ index, title, description, stack, url, demo }) {
         <span className="self-start mt-2">{url && <ArrowIcon />}</span>
       </Tag>
 
-      {demo && (
+      {media?.length > 0 && (
         <div className="mt-6 pl-16 sm:pl-[4.5rem]">
           <button
             type="button"
@@ -131,7 +193,9 @@ function ProjectRow({ index, title, description, stack, url, demo }) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
-            {showDemo ? 'Hide demo' : 'Watch demo'}
+            {showDemo
+              ? hasVideo ? 'Hide demo' : 'Hide preview'
+              : hasVideo ? 'Watch demo' : 'View preview'}
           </button>
 
           <AnimatePresence initial={false}>
@@ -143,16 +207,11 @@ function ProjectRow({ index, title, description, stack, url, demo }) {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="overflow-hidden"
               >
-                <video
-                  src={demo}
-                  controls
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="mt-5 w-full max-w-3xl rounded-xl border border-white/10 shadow-2xl shadow-black/40"
-                />
+                <div className="mt-5 flex flex-wrap items-start gap-4">
+                  {media.map((item) => (
+                    <MediaItem key={item.src} {...item} single={media.length === 1} />
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
