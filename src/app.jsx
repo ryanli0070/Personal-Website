@@ -7,6 +7,8 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import Particles from './homepage/particles.jsx';
+import Nebula from './homepage/nebula.jsx';
+import ShootingStars from './homepage/shooting-stars.jsx';
 import { triggerWarp } from './homepage/warp.js';
 import Nav from './components/nav.jsx';
 import Home from './homepage/body.jsx';
@@ -49,7 +51,9 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen bg-black relative">
         <div className="fixed inset-0 z-0">
+          <Nebula className="absolute inset-0" />
           <Particles
+            className="absolute inset-0"
             particleColors={['#ffffff', '#ffffff']}
             particleCount={2000}
             particleSpread={10}
@@ -60,6 +64,7 @@ export default function App() {
             alphaParticles={true}
             disableRotation={false}
           />
+          <ShootingStars className="absolute inset-0 h-full w-full" />
         </div>
         <div className="pointer-events-none fixed inset-0 z-[1] bg-[radial-gradient(ellipse_75%_65%_at_50%_45%,transparent_40%,rgba(0,0,0,0.65)_100%)]" />
         <div className="relative z-10">
