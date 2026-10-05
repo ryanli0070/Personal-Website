@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   motion,
   AnimatePresence,
@@ -86,6 +86,28 @@ function ArrowIcon() {
   );
 }
 
+// an expanded demo keeps decoding while scrolled out of view, so play
+// only what's on screen
+function useVisiblePlayback() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) video.play().catch(() => {});
+      else video.pause();
+    });
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
+function DemoVideo(props) {
+  const ref = useVisiblePlayback();
+  return <video ref={ref} {...props} />;
+}
+
 function MediaItem({ type, src, poster, alt, ratio = '16 / 9', single }) {
   const [w, h] = ratio.split('/').map(Number);
   const portrait = w < h;
@@ -99,7 +121,7 @@ function MediaItem({ type, src, poster, alt, ratio = '16 / 9', single }) {
 
   if (type === 'video') {
     return (
-      <video
+      <DemoVideo
         src={src}
         poster={poster}
         controls

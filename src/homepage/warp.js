@@ -1,3 +1,7 @@
+// how long a jump cruises at full warp before braking — just past the
+// page's 600ms exit, so the next page glides in as the stars slow down
+export const WARP_HOLD_MS = 700;
+
 let requestedAt = 0;
 // the on-load arrival gets a random heading too, so no two visits
 // drop out of hyperspace from quite the same angle

@@ -77,8 +77,8 @@ export default function App() {
                 opacity: 1,
                 y: 0,
                 filter: 'blur(0px)',
-                // hang in pure starfield for a beat, then glide in slow
-                transition: { duration: 1.0, ease: EASE, delay: 0.15 },
+                // the briefest beat of pure starfield, then glide in slow
+                transition: { duration: 1.0, ease: EASE, delay: 0.05 },
               }}
               exit={{
                 opacity: 0,

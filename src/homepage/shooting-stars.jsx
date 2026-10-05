@@ -26,6 +26,8 @@ export default function ShootingStars({ className = '' }) {
 
     const stars = [];
     let spawnTimeout;
+    let animationFrameId = 0;
+    let lastTime = 0;
 
     const spawn = () => {
       const fromLeft = Math.random() < 0.5;
@@ -41,6 +43,11 @@ export default function ShootingStars({ className = '' }) {
         life: 900 + Math.random() * 600,
         age: 0,
       });
+      // the loop sleeps between stars, so wake it for this one
+      if (!animationFrameId) {
+        lastTime = performance.now();
+        animationFrameId = requestAnimationFrame(update);
+      }
       schedule();
     };
 
@@ -50,17 +57,19 @@ export default function ShootingStars({ className = '' }) {
     // first one arrives soon enough to be noticed
     spawnTimeout = setTimeout(spawn, 1200 + Math.random() * 1800);
 
-    let animationFrameId;
-    let lastTime = performance.now();
-
-    const update = (t) => {
-      animationFrameId = requestAnimationFrame(update);
+    function update(t) {
       const delta = Math.min(t - lastTime, 64);
       lastTime = t;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      if (stars.length === 0) return;
+      // an untouched canvas costs the compositor nothing, so stop
+      // redrawing the instant the sky is empty
+      if (stars.length === 0) {
+        animationFrameId = 0;
+        return;
+      }
+      animationFrameId = requestAnimationFrame(update);
 
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineCap = 'round';
@@ -97,8 +106,7 @@ export default function ShootingStars({ className = '' }) {
         ctx.arc(s.x, s.y, 1.4, 0, Math.PI * 2);
         ctx.fill();
       }
-    };
-    animationFrameId = requestAnimationFrame(update);
+    }
 
     return () => {
       window.removeEventListener('resize', resize);

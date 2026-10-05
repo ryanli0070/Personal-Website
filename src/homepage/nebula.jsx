@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
-import { getWarpRequestedAt } from './warp.js';
+import { getWarpRequestedAt, WARP_HOLD_MS } from './warp.js';
 
 const vertex = /* glsl */ `
   attribute vec2 uv;
@@ -99,9 +99,6 @@ const fragment = /* glsl */ `
   }
 `;
 
-// mirrors the particle field's warp envelope so both layers breathe together
-const WARP_HOLD_MS = 1000;
-
 export default function Nebula({ className = '' }) {
   const containerRef = useRef(null);
 
@@ -116,9 +113,10 @@ export default function Nebula({ className = '' }) {
     let renderer;
     try {
       renderer = new Renderer({
-        // the clouds are low-frequency, so render at half resolution and
-        // let the browser upscale — invisible quality loss, 4x cheaper
-        dpr: Math.min(window.devicePixelRatio || 1, 2) * 0.5,
+        // the clouds are low-frequency, so render at half a CSS pixel and
+        // let the browser upscale — invisible quality loss, and retina
+        // screens no longer pay 4x for detail the fbm doesn't have
+        dpr: 0.5,
         alpha: false,
         depth: false,
         antialias: false,
@@ -173,6 +171,7 @@ export default function Nebula({ className = '' }) {
 
     let animationFrameId;
     let lastTime = performance.now();
+    let lastDraw = 0;
     let nebTime = program.uniforms.uTime.value;
     // arrive out of hyperspace glowing, like the starfield does
     let warpAmount = 1;
@@ -194,6 +193,11 @@ export default function Nebula({ className = '' }) {
       const ease = 1 - Math.exp(-delta / 400);
       mouse[0] += (mouseTarget.x - mouse[0]) * ease;
       mouse[1] += (mouseTarget.y - mouse[1]) * ease;
+
+      // the drift is slow enough that 60fps reads identically to 120fps
+      // on ProMotion screens, at half the shader cost
+      if (t - lastDraw < 15) return;
+      lastDraw = t;
 
       program.uniforms.uTime.value = nebTime;
       program.uniforms.uWarp.value = warpAmount;

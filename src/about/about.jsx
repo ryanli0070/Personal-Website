@@ -4,7 +4,7 @@ import {
   useMotionTemplate,
   useReducedMotion,
 } from 'framer-motion';
-import aboutpic from '../images/aboutpic.webp';
+import aboutpic from '../images/aboutpic.jpg';
 import { Reveal, Kicker } from '../components/motion.jsx';
 
 const MotionDiv = motion.div;
@@ -49,6 +49,9 @@ function TiltPortrait() {
         <img
           src={aboutpic}
           alt="Picture of Ryan"
+          width={720}
+          height={960}
+          decoding="async"
           className="w-56 sm:w-72 object-cover"
         />
         <MotionDiv

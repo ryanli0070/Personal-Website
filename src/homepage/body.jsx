@@ -43,7 +43,11 @@ function MagneticLetter({ char, mouseX, mouseY }) {
     const RADIUS = 160;
     const PUSH = 26;
 
-    const update = () => {
+    // pointer events can outpace the display several times over, and
+    // x and y each fire — measure once per frame, not once per event
+    let pending = 0;
+    const measure = () => {
+      pending = 0;
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -59,12 +63,16 @@ function MagneticLetter({ char, mouseX, mouseY }) {
         y.set(0);
       }
     };
+    const update = () => {
+      if (!pending) pending = requestAnimationFrame(measure);
+    };
 
     const unsubX = mouseX.on('change', update);
     const unsubY = mouseY.on('change', update);
     return () => {
       unsubX();
       unsubY();
+      cancelAnimationFrame(pending);
     };
   }, [reduce, mouseX, mouseY, x, y]);
 

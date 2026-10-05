@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Renderer, Camera, Geometry, Program, Mesh } from 'ogl';
-import { getWarpRequestedAt, getWarpDirection } from './warp.js';
+import { getWarpRequestedAt, getWarpDirection, WARP_HOLD_MS } from './warp.js';
 
 //import './Particles.css';
 
@@ -178,15 +178,15 @@ const Particles = ({
     window.addEventListener('resize', resize, false);
     resize();
 
+    // the field is fixed full-screen, so the viewport is its rect —
+    // no layout query on every pointer event
     const handleMouseMove = e => {
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      mouseRef.current = { x, y };
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseRef.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
     };
 
     if (moveParticlesOnHover) {
-      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove, { passive: true });
     }
 
     const count = particleCount;
@@ -239,7 +239,6 @@ const Particles = ({
 
     // start at full warp so the site "arrives" out of hyperspace on load
     let warpAmount = 1;
-    const WARP_HOLD_MS = 1000;
     const xyWrap = particleSpread * 2;
     const zWrap = particleSpread * 20;
 
